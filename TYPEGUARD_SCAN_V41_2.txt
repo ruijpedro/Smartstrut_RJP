@@ -1,0 +1,8 @@
+src/modules/structural2d/solver.ts:8: const e=m.members.find(x=>x.id===memberId)
+src/modules/structural2d/solver.ts:30: const L=memberLength(m,l.member)
+src/modules/structural2d/solver.ts:54: const members:MemberResult[]=m.members.map(e=>{
+src/modules/structural2d/Structural2DEditor.tsx:43: const id=Math.max(0,...model.members.map(e=>e.id))+1
+src/modules/structural2d/Structural2DEditor.tsx:45: setModel({...model,members:[...model.members,{id,a,b,E:210,A:.006,I:8e-5,label:`B${id}`}]})
+src/modules/structural2d/Structural2DEditor.tsx:130: return 'node' in l ? `Nó ${l.node}` : `Barra ${l.member}`
+src/modules/structural2d/Structural2DEditor.tsx:152: {model.members.map(e=>{
+src/modules/structural2d/Structural2DEditor.tsx:194: const e=model.members.find(x=>x.id===load.member); if(!e)return null
