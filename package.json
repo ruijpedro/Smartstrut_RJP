@@ -1,14 +1,16 @@
 {
   "name": "smartstruct-rjp",
   "private": true,
-  "version": "72.2.0",
+  "version": "72.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "cap:sync": "npx cap sync android",
-    "android:add": "npx cap add android"
+    "android:add": "npx cap add android",
+    "typecheck": "tsc --noEmit",
+    "build:web": "tsc && vite build"
   },
   "dependencies": {
     "@capacitor/android": "7.4.3",
