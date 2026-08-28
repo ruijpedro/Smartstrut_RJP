@@ -1,9 +1,10 @@
 import React,{useEffect,useMemo,useState} from 'react'
 import {sizeWater,sizeSewer} from './network'
 import {loadPublicGraph,savePublicGraph} from './publicNetworkStore'
+import {TechnicalSymbol} from './TechnicalSymbols'
 
 type Mode='water'|'sewer'|'public'|'storm'
-type Kind='meter'|'tap'|'basin'|'wc'|'shower'|'bidet'|'bath'|'sink'|'washer'|'dishwasher'|'floorDrain'|'stack'|'vent'|'siphon'|'inspection'|'manhole'|'connection'|'gully'|'curbInlet'|'catchBasin'|'loadChamber'|'dischargeChamber'|'invertedSiphon'|'pumpStation'|'terminal'
+type Kind='meter'|'tap'|'basin'|'wc'|'shower'|'bidet'|'bath'|'sink'|'washer'|'dishwasher'|'floorDrain'|'stack'|'vent'|'siphon'|'inspection'|'manhole'|'connection'|'gully'|'curbInlet'|'catchBasin'|'loadChamber'|'dischargeChamber'|'invertedSiphon'|'pumpStation'|'terminal'|'gateValve'|'checkValve'|'butterflyValve'|'reducer'|'filter'|'pump'|'flange'|'tee'
 type Point={x:number,y:number}
 type Node={id:number;kind:Kind;x:number;y:number;label:string;ground?:number;invert?:number}
 type Edge={id:number;a:number;b:number;L:number;slope:number;q:number;dnMin:number;points:Point[]}
@@ -19,9 +20,12 @@ const defs:{kind:Kind,label:string}[]=[
  {kind:'catchBasin',label:'Sarjeta'},{kind:'curbInlet',label:'Boca de lobo'},
  {kind:'loadChamber',label:'Câmara de carga'},{kind:'dischargeChamber',label:'Câmara de descarga'},
  {kind:'invertedSiphon',label:'Sifão invertido'},{kind:'pumpStation',label:'EEAR'},
- {kind:'terminal',label:'Terminal de limpeza'}
+ {kind:'terminal',label:'Terminal de limpeza'},
+ {kind:'gateValve',label:'Válvula seccionamento'},{kind:'checkValve',label:'Válvula retenção'},
+ {kind:'butterflyValve',label:'Válvula borboleta'},{kind:'reducer',label:'Redução'},
+ {kind:'filter',label:'Filtro'},{kind:'pump',label:'Bomba'},{kind:'flange',label:'Flange'},{kind:'tee',label:'Tê'}
 ]
-const waterKinds:Kind[]=['meter','tap','basin','shower']
+const waterKinds:Kind[]=['meter','gateValve','checkValve','butterflyValve','filter','pump','flange','reducer','tee','tap','basin','shower']
 const sewerKinds:Kind[]=['basin','wc','shower','bidet','bath','sink','washer','dishwasher','floorDrain','stack','vent','siphon','inspection']
 const publicKinds:Kind[]=['manhole','inspection','connection','terminal','loadChamber','dischargeChamber','invertedSiphon','pumpStation']
 const stormKinds:Kind[]=['inspection','manhole','gully','catchBasin','curbInlet','terminal','loadChamber','dischargeChamber','pumpStation']
@@ -118,7 +122,7 @@ export default function GraphicNetworkEditor(){
     <button className={mode==='storm'?'active':''} onClick={()=>reset('storm')}>Águas Pluviais</button>
    </div>
    <div className="palette">
-    {palette.map(d=><button key={d.kind} className={!lineMode&&tool===d.kind?'active':''} onClick={()=>{setLineMode(false);setTool(d.kind)}}>{d.label}</button>)}
+    {palette.map(d=><button key={d.kind} className={!lineMode&&tool===d.kind?'active':''} onClick={()=>{setLineMode(false);setTool(d.kind)}}><span className="palette-symbol"><svg viewBox="-24 -24 48 48"><TechnicalSymbol kind={d.kind} x={0} y={0} size={34}/></svg></span><span>{d.label}</span></button>)}
     <button className={lineMode?'active':''} onClick={()=>{setLineMode(!lineMode);setLineStart(null);setRoute([])}}>✎ Linha / Tubagem</button>
     <button onClick={clearAll}>Limpar desenho</button>
    </div>
@@ -153,9 +157,9 @@ export default function GraphicNetworkEditor(){
       return <polyline points={[{x:a.x,y:a.y},...route].map(p=>`${p.x},${p.y}`).join(' ')} fill="none" stroke="#42d4cd" strokeWidth="3" strokeDasharray="8 6"/>
     })()}
     {nodes.map(n=><g key={n.id} onClick={e=>nodeClick(n.id,e)} style={{cursor:lineMode?'crosshair':'pointer'}}>
-      <circle cx={n.x} cy={n.y} r="22" fill={lineStart===n.id?'#185f68':'#102b3d'} stroke="#42d4cd" strokeWidth="3"/>
-      <text x={n.x} y={n.y+4} textAnchor="middle" fill="#fff" fontSize="10">{symbol(n.kind)}</text>
-      <text x={n.x} y={n.y+39} textAnchor="middle" fill="#9bb1c2" fontSize="11">{n.label}</text>
+      <circle cx={n.x} cy={n.y} r="25" fill={lineStart===n.id?'#123d4a':'#07131e'} stroke={lineStart===n.id?'#67e8f9':'#28485d'} strokeWidth="1.5"/>
+      <TechnicalSymbol kind={n.kind} x={n.x} y={n.y} size={42} selected={lineStart===n.id}/>
+      <text x={n.x} y={n.y+41} textAnchor="middle" fill="#cbd5e1" fontSize="11" fontWeight="650">{n.label}</text>
     </g>)}
    </svg>
   </section>
