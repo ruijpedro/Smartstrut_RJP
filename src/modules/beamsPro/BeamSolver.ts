@@ -55,8 +55,23 @@ export function solveBeam(i:BeamInput){
  }
  const Vmax=Math.max(...samples.map(s=>Math.abs(s.V))), Mmax=Math.max(...samples.map(s=>Math.abs(s.M)))
  const maxM=samples.reduce((a,b)=>Math.abs(b.M)>Math.abs(a.M)?b:a,samples[0])
+ const Mpos=Math.max(0,...samples.map(s=>s.M))
+ const Mneg=Math.min(0,...samples.map(s=>s.M))
  const d=Math.max(i.h-i.cover-.01,.05),z=.9*d,fyd=ec2Fyd(i.fyk)
- const AsReq=Mmax*1e6/Math.max(z*1000*fyd,1e-9),AsMin=.0013*i.b*i.h*1e6,As=Math.max(AsReq,AsMin)
+ const bmm=i.b*1000,dmm=d*1000,hmm=i.h*1000
+ const fctm=i.fck<=50?0.3*Math.pow(i.fck,2/3):2.12*Math.log(1+(i.fck+8)/10)
+ const AsMin=Math.max(0.26*fctm/Math.max(i.fyk,1)*bmm*dmm,0.0013*bmm*dmm)
+ const AsMax=0.04*bmm*hmm
+ const AsReqPos=Mpos*1e6/Math.max(z*1000*fyd,1e-9)
+ const AsReqNeg=Math.abs(Mneg)*1e6/Math.max(z*1000*fyd,1e-9)
+ const AsBottom=Math.max(AsReqPos,AsMin)
+ const AsTop=Math.max(AsReqNeg,AsMin)
+ const AsReq=Math.max(AsReqPos,AsReqNeg),As=Math.max(AsReq,AsMin)
+ const rhoWMin=0.08*Math.sqrt(Math.max(i.fck,0))/Math.max(i.fyk,1)
+ const AswPerSMin=rhoWMin*bmm
+ const AswPerSCalc=Vmax*1000/Math.max(z*1000*fyd,1e-9)
+ const AswPerS=Math.max(AswPerSCalc,AswPerSMin)
  const deflectionLimit=L/250
- return {RA,RB,Mleft,Mright,Vmax,Mmax,maxM,samples,AsReq,AsMin,As,d,z,spanDepth:L/i.h,deflectionLimit}
+ return {RA,RB,Mleft,Mright,Vmax,Mmax,maxM,Mpos,Mneg,samples,AsReq,AsReqPos,AsReqNeg,AsMin,AsMax,As,AsBottom,AsTop,AswPerS,AswPerSCalc,AswPerSMin,d,z,fctm,fyd,spanDepth:L/i.h,deflectionLimit}
+
 }
