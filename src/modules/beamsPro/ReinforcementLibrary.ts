@@ -102,3 +102,43 @@ export function chooseDistributed(requiredPerM:number,maxSpacing=300,minDia=6,ma
   return candidates.sort((a,b)=>a.excess-b.excess || b.spacing-a.spacing || a.dia-b.dia)[0] ??
     {dia:25,spacing:75,areaPerM:distributedAreaPerM(25,75),requiredPerM:req,excess:0,label:'Ø25 // 75 mm'}
 }
+
+
+export type AnchorageResult={
+  phi:number
+  fctm:number
+  fctk005:number
+  fctd:number
+  fbd:number
+  sigmaSd:number
+  lbRqd:number
+  lbMin:number
+  lbd:number
+  lapMin:number
+  lap:number
+  assumptions:string[]
+}
+
+/**
+ * Preliminary EC2-style anchorage helper.
+ * Assumptions: ribbed bars, good bond, phi <= 32 mm, alpha factors = 1.0,
+ * sigma_sd = fyd. Intended for design assistance, not final normative detailing.
+ */
+export function anchorageLength(phi:number,fck:number,fyk:number):AnchorageResult{
+  const fctm=fck<=50?0.3*Math.pow(Math.max(fck,0),2/3):2.12*Math.log(1+(fck+8)/10)
+  const fctk005=0.7*fctm
+  const gammaC=1.5,gammaS=1.15
+  const fctd=fctk005/gammaC
+  const eta1=1,eta2=phi<=32?1:Math.max(0.7,(132-phi)/100)
+  const fbd=2.25*eta1*eta2*fctd
+  const sigmaSd=fyk/gammaS
+  const lbRqd=(phi/4)*sigmaSd/Math.max(fbd,1e-9)
+  const lbMin=Math.max(0.3*lbRqd,10*phi,100)
+  const lbd=Math.max(lbRqd,lbMin)
+  const lapMin=Math.max(0.3*lbRqd,15*phi,200)
+  const lap=Math.max(1.5*lbRqd,lapMin)
+  return{
+    phi,fctm,fctk005,fctd,fbd,sigmaSd,lbRqd,lbMin,lbd,lapMin,lap,
+    assumptions:['aderência boa','varão nervurado','α1…α5 = 1,0','σsd = fyd','sobreposição preliminar = 1,5·lb,rqd']
+  }
+}
