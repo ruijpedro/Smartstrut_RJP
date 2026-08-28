@@ -229,3 +229,10 @@ h1,h2,h3,h4,h5,h6,.module-head h2,.panel h3,.panel h4,.rebar-label-svg,.metric b
 .help-symbols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .help-symbols span{padding:8px 10px;border:1px solid rgba(148,163,184,.18);border-radius:8px}
 @media(max-width:760px){.help-grid{grid-template-columns:1fr}.help-symbols{grid-template-columns:1fr}.help-start{position:static}.help-flow span{display:none}.help-flow b{flex:1 1 45%;text-align:center}}
+/* V81 — biblioteca gráfica técnica */
+.palette button{display:inline-flex;align-items:center;gap:7px}
+.palette-symbol{width:30px;height:30px;display:inline-grid;place-items:center;flex:0 0 30px}
+.palette-symbol svg{width:30px;height:30px;overflow:visible}
+.network-canvas{background:#07131e}
+.network-canvas text{font-family:var(--app-font);text-shadow:none;filter:none}
+@media(max-width:620px){.palette button{min-height:48px}.palette-symbol{width:34px;height:34px}.palette-symbol svg{width:34px;height:34px}}
