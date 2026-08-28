@@ -29,3 +29,4 @@ export type ModuleId =
   | 'library'
   | 'tools'
   | 'settings'
+  | 'help'

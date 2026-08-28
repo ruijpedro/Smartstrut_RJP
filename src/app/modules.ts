@@ -31,4 +31,5 @@ export const modules: ModuleItem[] = [
   { id: 'library', label: 'Biblioteca Técnica', group: 'Ferramentas', status: 'planned' },
   { id: 'tools', label: 'Ferramentas', group: 'Ferramentas', status: 'planned' },
   { id: 'settings', label: 'Configurações', group: 'Ferramentas', status: 'planned' },
+  { id: 'help', label: 'Ajuda · Como operar', group: 'Ferramentas', status: 'ready' },
 ]

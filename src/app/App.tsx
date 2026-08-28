@@ -37,6 +37,7 @@ import IntegratedStructurePage from '../modules/integratedStructure/IntegratedSt
 import FrameFoundationPage from '../modules/frameFoundation/FrameFoundationPage'
 import BuildingModelPage from '../modules/buildingModel/BuildingModelPage'
 import StructuralProjectPage from '../modules/structuralProject/StructuralProjectPage'
+import HelpPage from '../modules/help/HelpPage'
 
 function Planned({ title }: { title: string }) {
   return <div className="page"><div className="pageTitle"><h1>{title}</h1><span>Em preparação</span></div><section className="panel planned"><h2>Módulo ainda não integrado</h2><p>Este módulo será acrescentado numa fase própria, mantendo WebApp e APK compiláveis antes de avançar.</p></section></div>
@@ -80,5 +81,6 @@ export default function App() {
   if (active === 'library') content = <OnlineLibraryPage/>
   if (active === 'tools') content = <ToolsPage/>
   if (active === 'settings') content = <SettingsPage/>
+  if (active === 'help') content = <HelpPage/>
   return <div className="appShell"><Sidebar active={active} onSelect={setActive} open={menuOpen} onClose={() => setMenuOpen(false)}/><div className="mainShell"><Topbar onMenu={() => setMenuOpen(true)}/><main>{content}</main></div>{menuOpen && <button className="overlay" onClick={() => setMenuOpen(false)} aria-label="Fechar menu"/>}</div>
 }
