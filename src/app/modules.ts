@@ -13,6 +13,8 @@ export const modules: ModuleItem[] = [
   { id: 'framefoundation', label: 'Pórtico → Fundação', group: 'Fundações', status: 'ready' },
   { id: 'buildingmodel', label: 'Modelo de Edifício', group: 'Análise Estrutural', status: 'ready' },
   { id: 'structuralproject', label: 'Structural Project PRO', group: 'Análise Estrutural', status: 'ready' },
+  { id: 'lsf', label: 'Estruturas LSF', group: 'Análise Estrutural', status: 'ready' },
+  { id: 'preliminarystudy', label: 'Estudo Prévio', group: 'Geral', status: 'ready' },
   { id: 'walls', label: 'Muro em consola', group: 'Contenção', status: 'ready' },
   { id: 'containment', label: 'Muros e sistemas', group: 'Contenção', status: 'ready' },
   { id: 'soilnails', label: 'Pregagens', group: 'Estabilização', status: 'ready' },

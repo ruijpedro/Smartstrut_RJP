@@ -11,6 +11,8 @@ export type ModuleId =
   | 'framefoundation'
   | 'buildingmodel'
   | 'structuralproject'
+  | 'lsf'
+  | 'preliminarystudy'
   | 'walls'
   | 'containment'
   | 'soilnails'
