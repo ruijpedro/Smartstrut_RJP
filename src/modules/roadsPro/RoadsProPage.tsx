@@ -1,8 +1,9 @@
 import React,{useMemo,useState} from 'react'
+import {EngineeringBasis,PreliminaryChecklist} from '../../engineering/EngineeringBasis'
 import {curveRadius,horizontalCurve,stoppingSightDistance,verticalCurve,roadCrossSection,roundaboutGeometry,earthworksStations,profileToCrossSections,massHaul,rationalFlow,trapezoidalDitchFlow,circularCulvertFullFlow,runoffTimeKirpich,drainageSpacing,drainageLongProfile,interpolateProfile,alignmentLengths,xyFromPkOffset,projectXYToAlignment,type ProfilePoint,type DrainageNode,type AlignmentVertex,type XYDrainageElement} from './RoadSolver'
 const F=({l,v,s,u}:{l:string,v:number,s:(n:number)=>void,u?:string})=><label className="field"><span>{l}{u?` (${u})`:''}</span><input type="number" step="any" value={v} onChange={e=>s(+e.target.value)}/></label>
 const M=({t,v}:{t:string,v:string})=><div className="metric"><span>{t}</span><b>{v}</b></div>
-type Tab='alignment'|'profile'|'section'|'visibility'|'roundabout'|'earth'|'mass'|'drainage'|'drainprofile'|'xyplan'|'drainplan'
+type Tab='alignment'|'profile'|'section'|'visibility'|'roundabout'|'earth'|'mass'|'drainage'|'drainprofile'|'xyplan'|'drainplan'|'criteria'
 export default function RoadsProPage(){
  const[tab,setTab]=useState<Tab>('alignment'),[V,setV]=useState(80),[e,setE]=useState(.06),[f,setF]=useState(.12),[R,setR]=useState(300),[delta,setDelta]=useState(35)
  const[g1,setG1]=useState(2),[g2,setG2]=useState(-1.5),[Lv,setLv]=useState(120)
@@ -53,7 +54,7 @@ export default function RoadsProPage(){
  const syncDrainGround=()=>setDnodes(dnodes.map(x=>({...x,ground:interpolateProfile(prof,x.pk,'grade')})))
  const upd=(i:number,k:'pk'|'terrain'|'grade',v:number)=>setProf(prof.map((x,j)=>j===i?{...x,[k]:v}:x))
  return <div className="module-page"><div className="module-head"><div><h2>Infraestruturas Viárias PRO</h2><p>Eixo por PK, rasante, perfis transversais, cubagens e diagrama de massas.</p></div></div>
- <div className="tabs-row">{([['alignment','Traçado'],['profile','Rasante / PK'],['section','Secção'],['visibility','Visibilidade'],['roundabout','Rotunda'],['earth','Perfis / Volumes'],['mass','Massas'],['drainage','Drenagem'],['drainprofile','Perfil drenagem'],['xyplan','Planta XY'],['drainplan','Planta drenagem']] as [Tab,string][]).map(([k,l])=><button key={k} className={tab===k?'active':''} onClick={()=>setTab(k)}>{l}</button>)}</div>
+ <div className="tabs-row">{([['alignment','Traçado'],['profile','Rasante / PK'],['section','Secção'],['visibility','Visibilidade'],['roundabout','Rotunda'],['earth','Perfis / Volumes'],['mass','Massas'],['drainage','Drenagem'],['drainprofile','Perfil drenagem'],['xyplan','Planta XY'],['drainplan','Planta drenagem'],['criteria','Normas / Critérios']] as [Tab,string][]).map(([k,l])=><button key={k} className={tab===k?'active':''} onClick={()=>setTab(k)}>{l}</button>)}</div>
 
  {tab==='alignment'&&<div className="work-grid"><section className="panel"><h3>Curva horizontal</h3><div className="form-grid"><F l="Velocidade" u="km/h" v={V} s={setV}/><F l="Sobreelevação e" v={e} s={setE}/><F l="Atrito lateral f" v={f} s={setF}/><F l="Raio adotado" u="m" v={R} s={setR}/><F l="Ângulo Δ" u="°" v={delta} s={setDelta}/></div><PlanSvg R={R} delta={delta}/></section><section className="panel"><h3>Resultados geométricos</h3><div className="result-grid"><M t="R mín. indicativo" v={`${rmin.R.toFixed(1)} m`}/><M t="Tangente T" v={`${hc.T.toFixed(1)} m`}/><M t="Desenvolvimento L" v={`${hc.L.toFixed(1)} m`}/><M t="Externa E" v={`${hc.E.toFixed(2)} m`}/><M t="Ordenada média" v={`${hc.M.toFixed(2)} m`}/><M t="R adotado" v={R>=rmin.R?'OK':'REVER'}/></div></section></div>}
 
@@ -153,6 +154,8 @@ export default function RoadsProPage(){
    <p className="note">Nesta versão, os elementos gráficos ficam parametrizados por PK/offset. Ao alterar a geometria do eixo, a posição XY é recalculada automaticamente, preservando a referência longitudinal do projeto.</p>
   </section>
  </>}
+
+ {tab==='criteria'&&<><EngineeringBasis area="roads"/><section className="panel"><h3>Checklist de estudo prévio viário</h3><PreliminaryChecklist items={[{name:'Classe / função da via e velocidade de projeto',status:'check',detail:'Definir com a entidade gestora antes de fixar parâmetros geométricos.'},{name:'Traçado horizontal',status:'ok',detail:'Raios, desenvolvimento e planta XY disponíveis para pré-estudo.'},{name:'Rasante / curvas verticais',status:'ok',detail:'Perfil longitudinal e parâmetro K disponíveis.'},{name:'Visibilidade de paragem',status:'ok',detail:'Cálculo físico implementado; valores mínimos regulamentares devem ser confirmados.'},{name:'Terraplenagens / massas',status:'ok',detail:'Perfis, volumes e diagrama de massas disponíveis.'},{name:'Drenagem',status:'ok',detail:'Pré-dimensionamento e representação em planta/perfil disponíveis.'},{name:'Sinalização, segurança rodoviária e pavimento',status:'missing',detail:'Devem ser aprofundados com critérios da IP/IMT e documentos aplicáveis ao tipo de via.'}]}/></section></>}
 
  <section className="panel"><p className="note">Ferramenta de apoio a estudo/pre-dimensionamento. Traçado, visibilidade, perfis, cubagens e movimentação de terras devem ser verificados com os critérios regulamentares e topografia de projeto.</p></section></div>}
 

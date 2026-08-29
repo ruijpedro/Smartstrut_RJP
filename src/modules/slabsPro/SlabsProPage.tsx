@@ -1,4 +1,5 @@
 import React,{useMemo,useState} from 'react'
+import {EngineeringBasis} from '../../engineering/EngineeringBasis'
 import {solveSlab,type SlabSupport} from './SlabSolver'
 import {fmt} from '../../engineering/structuralMath'
 import {chooseDistributed,anchorageLength} from '../beamsPro/ReinforcementLibrary'

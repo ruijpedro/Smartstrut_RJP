@@ -5,14 +5,15 @@ import HydraulicsPro,{DrainagePro} from './HydraulicsPro'
 import SegmentDesigner from './SegmentDesigner'
 import GraphicNetworkEditor from './GraphicNetworkEditor'
 import PublicSewerProfile from './PublicSewerProfile'
-type Tab='profile'|'graphic'|'segments'|'network'|'builder'|'supply'|'waterpro'|'sewer'|'drainpro'|'storm'|'general'
+import {EngineeringBasis,PreliminaryChecklist} from '../../engineering/EngineeringBasis'
+type Tab='profile'|'graphic'|'segments'|'network'|'builder'|'supply'|'waterpro'|'sewer'|'drainpro'|'storm'|'general'|'criteria'
 type Counts=Record<string,number>
 const F=({l,v,s,u}:{l:string,v:number,s:(v:number)=>void,u:string})=><label className="compact-field"><span>{l}</span><div><input type="number" step="any" value={v} onChange={e=>s(+e.target.value)}/><em>{u}</em></div></label>
 export default function HydraulicsPage(){
  const[tab,setTab]=useState<Tab>('graphic')
  return <div className="module-page"><div className="module-head"><div><h2>Hidráulica e Drenagem</h2><p>Redes prediais de água, águas residuais, pluviais e hidráulica geral.</p></div></div>
- <nav className="hyd-tabs">{([['graphic','Editor Redes'],['profile','Perfil Público'],['segments','Troços'],['network','Projeto'],['builder','Aparelhos'],['supply','Abastecimento'],['waterpro','Água PRO'],['sewer','Esgotos'],['drainpro','Drenagem PRO'],['storm','Pluviais'],['general','Geral']] as const).map(([k,l])=><button className={tab===k?'active':''} onClick={()=>setTab(k)} key={k}>{l}</button>)}</nav>
- {tab==='graphic'&&<GraphicNetworkEditor/>}{tab==='profile'&&<PublicSewerProfile/>}{tab==='segments'&&<SegmentDesigner/>}{tab==='network'&&<NetworkDesigner/>}{tab==='builder'&&<SanitaryBuilder/>}{tab==='supply'&&<Supply/>}{tab==='waterpro'&&<HydraulicsPro/>}{tab==='sewer'&&<Sewer/>}{tab==='drainpro'&&<DrainagePro/>}{tab==='storm'&&<Storm/>}{tab==='general'&&<General/>}
+ <nav className="hyd-tabs">{([['graphic','Editor Redes'],['profile','Perfil Público'],['segments','Troços'],['network','Projeto'],['builder','Aparelhos'],['supply','Abastecimento'],['waterpro','Água PRO'],['sewer','Esgotos'],['drainpro','Drenagem PRO'],['storm','Pluviais'],['general','Geral'],['criteria','Normas / Critérios']] as const).map(([k,l])=><button className={tab===k?'active':''} onClick={()=>setTab(k)} key={k}>{l}</button>)}</nav>
+ {tab==='graphic'&&<GraphicNetworkEditor/>}{tab==='profile'&&<PublicSewerProfile/>}{tab==='segments'&&<SegmentDesigner/>}{tab==='network'&&<NetworkDesigner/>}{tab==='builder'&&<SanitaryBuilder/>}{tab==='supply'&&<Supply/>}{tab==='waterpro'&&<HydraulicsPro/>}{tab==='sewer'&&<Sewer/>}{tab==='drainpro'&&<DrainagePro/>}{tab==='storm'&&<Storm/>}{tab==='general'&&<General/>}{tab==='criteria'&&<HydraulicCriteria/>}
  </div>
 }
 function SanitaryBuilder(){
@@ -53,3 +54,12 @@ function General(){
 }
 const Calc=({title,children}:{title:string,children:React.ReactNode})=><section className="hyd-calc tech-card"><h3>{title}</h3><div className="hyd-grid">{children}</div></section>
 const R=({l,v}:{l:string,v:string})=><div className="hyd-result"><span>{l}</span><b>{v}</b></div>
+
+function HydraulicCriteria(){return <><EngineeringBasis area="hydraulics"/><section className="panel"><h3>Checklist de estudo prévio hidráulico</h3><PreliminaryChecklist items={[
+{name:'Origem / destino e entidade gestora',status:'check',detail:'Confirmar pressão disponível, cotas, ponto de ligação e condições da entidade gestora.'},
+{name:'Caudais de cálculo',status:'ok',detail:'A app dispõe de acumulação, simultaneidade preliminar, Manning, Hazen-Williams e método racional.'},
+{name:'Diâmetros / velocidades / perdas',status:'ok',detail:'Pré-dimensionamento implementado nos separadores de água e drenagem.'},
+{name:'Perfil e cotas da rede',status:'ok',detail:'Disponível para coletores públicos e editor gráfico.'},
+{name:'Órgãos e acessibilidade',status:'check',detail:'CV/PV, válvulas, sumidouros e outros órgãos devem ser validados segundo implantação e manutenção.'},
+{name:'Anexos e curvas regulamentares',status:'missing',detail:'Algumas curvas/tabelas do DR 23/95 ainda não estão digitalizadas de forma normativa.'}
+]}/></section></>}

@@ -1,4 +1,5 @@
 import React,{useMemo,useState} from 'react'
+import {EngineeringBasis} from '../../engineering/EngineeringBasis'
 import {solveColumn,type EndCondition} from './ColumnSolver'
 import {fmt} from '../../engineering/structuralMath'
 import {chooseBars,chooseStirrups,anchorageLength} from '../beamsPro/ReinforcementLibrary'

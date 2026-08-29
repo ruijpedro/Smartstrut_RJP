@@ -1,4 +1,5 @@
 import React,{useMemo,useState} from 'react'
+import {EngineeringBasis} from '../../engineering/EngineeringBasis'
 import {isolatedFootingPro,stripFooting,raftFoundation,pileGroup} from './FoundationsSolver'
 import {chooseDistributed,anchorageLength} from '../beamsPro/ReinforcementLibrary'
 const F=({l,v,s,u}:{l:string,v:number,s:(n:number)=>void,u?:string})=><label className="field"><span>{l}{u?` (${u})`:''}</span><input type="number" step="any" value={v} onChange={e=>s(+e.target.value)}/></label>

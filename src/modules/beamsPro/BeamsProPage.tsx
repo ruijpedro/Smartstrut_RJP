@@ -1,4 +1,5 @@
 import React,{useMemo,useState} from 'react'
+import {EngineeringBasis} from '../../engineering/EngineeringBasis'
 import {solveBeam,type SupportType,type BeamLoad} from './BeamSolver'
 import {fmt} from '../../engineering/structuralMath'
 import {chooseBars,chooseStirrups,barArea,anchorageLength} from './ReinforcementLibrary'
@@ -99,6 +100,7 @@ export default function BeamsProPage(){
   {step==='verificacoes'&&<section className="panel"><h3>Verificações</h3><div className="result-grid"><Metric t="As inferior" v={reinforcement.bottom.area>=r.AsBottom?'OK':'REVER'}/><Metric t="As superior" v={reinforcement.top.area>=r.AsTop?'OK':'REVER'}/><Metric t="Asw/s" v={reinforcement.stirrup.aswPerS>=r.AswPerS?'OK':'REVER'}/><Metric t="Disposição inferior" v={reinforcement.bottom.fits?'OK':'REVER'}/><Metric t="Disposição superior" v={reinforcement.top.fits?'OK':'REVER'}/></div><p className="note">Verificações automáticas desta página são de apoio ao dimensionamento. Permanecem por confirmar ELU/ELS completos, ancoragens, emendas, fendilhação, deformações, torção e regras de pormenorização aplicáveis.</p></section>}
 
   {(step==='armaduras'||step==='pormenorizacao'||step==='desenhos')&&<section className="panel"><h3>Resumo de armaduras</h3><div className="result-grid"><Metric t="Inferior" v={reinforcement.bottom.label}/><Metric t="Superior" v={reinforcement.top.label}/><Metric t="Estribos apoios" v={`2R Ø${reinforcement.stirrup.dia} // ${stirrupSupportSpacing} mm`}/><Metric t="Estribos vão" v={`2R Ø${reinforcement.stirrup.dia} // ${reinforcement.stirrup.spacing} mm`}/><Metric t="N.º estribos aprox." v={`${nStirrups}`}/><Metric t="Peso aço aprox." v={`${fmt(steelWeight,1)} kg`}/></div></section>}
+ <EngineeringBasis area="structures" compact/>
  </div>
 }
 
