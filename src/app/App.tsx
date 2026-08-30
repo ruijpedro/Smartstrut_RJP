@@ -36,6 +36,7 @@ import { OnlineLibraryPage } from '../modules/onlineLibrary'
 import IntegratedStructurePage from '../modules/integratedStructure/IntegratedStructurePage'
 import FrameFoundationPage from '../modules/frameFoundation/FrameFoundationPage'
 import BuildingModelPage from '../modules/buildingModel/BuildingModelPage'
+import { BIMModelPage } from '../modules/bimModel'
 import StructuralProjectPage from '../modules/structuralProject/StructuralProjectPage'
 import HelpPage from '../modules/help/HelpPage'
 import LSFPage from '../modules/lsf/LSFPage'
@@ -66,6 +67,7 @@ export default function App() {
   if (active === 'integrated') content = <IntegratedStructurePage/>
   if (active === 'framefoundation') content = <FrameFoundationPage/>
   if (active === 'buildingmodel') content = <BuildingModelPage/>
+  if (active === 'bimmodel') content = <BIMModelPage/>
   if (active === 'structuralproject') content = <StructuralProjectPage/>
   if (active === 'lsf') content = <LSFPage/>
   if (active === 'preliminarystudy') content = <PreliminaryStudyPage/>

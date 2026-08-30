@@ -12,6 +12,7 @@ export const modules: ModuleItem[] = [
   { id: 'integrated', label: 'Estrutura Integrada', group: 'Fundações', status: 'ready' },
   { id: 'framefoundation', label: 'Pórtico → Fundação', group: 'Fundações', status: 'ready' },
   { id: 'buildingmodel', label: 'Modelo de Edifício', group: 'Análise Estrutural', status: 'ready' },
+  { id: 'bimmodel', label: 'Modelo BIM', group: 'Análise Estrutural', status: 'ready' },
   { id: 'structuralproject', label: 'Structural Project PRO', group: 'Análise Estrutural', status: 'ready' },
   { id: 'lsf', label: 'Estruturas LSF', group: 'Análise Estrutural', status: 'ready' },
   { id: 'preliminarystudy', label: 'Estudo Prévio', group: 'Geral', status: 'ready' },
