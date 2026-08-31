@@ -1,4 +1,5 @@
-import React,{useMemo,useState} from 'react'
+import React,{useEffect,useMemo,useState} from 'react'
+import {readBIMHandoff,updateBIMCalculation,n} from '../../engineering/bim/calculationBridge'
 import {EngineeringBasis} from '../../engineering/EngineeringBasis'
 import {solveColumn,type EndCondition} from './ColumnSolver'
 import {fmt} from '../../engineering/structuralMath'
@@ -6,6 +7,8 @@ import {chooseBars,chooseStirrups,anchorageLength} from '../beamsPro/Reinforceme
 const F=({l,v,s,u}:{l:string,v:number,s:(n:number)=>void,u?:string})=><label className="field"><span>{l}{u?` (${u})`:''}</span><input type="number" step="any" value={v} onChange={e=>s(+e.target.value)}/></label>
 export default function ColumnsProPage(){
  const[N,setN]=useState(900),[Mx,setMx]=useState(65),[My,setMy]=useState(20),[b,setB]=useState(.35),[h,setH]=useState(.45),[L,setL]=useState(3),[fck,setFck]=useState(30),[fyk,setFyk]=useState(500),[E,setE]=useState(30),[cover,setCover]=useState(.035),[phi,setPhi]=useState(16),[k,setK]=useState(1),[end,setEnd]=useState<EndCondition>('pinned')
+ const[bimSource,setBimSource]=useState<string|null>(null)
+ useEffect(()=>{const x=readBIMHandoff(['column']);if(!x)return;setBimSource(x.elementId);setB(n(x.geometry.b,b));setH(n(x.geometry.h,h));setL(n(x.geometry.length,L));setFck(n(x.material?.properties?.fck_MPa,fck));const rr=x.calculation?.results||{};setN(n(rr.Nmax_kN??rr.Nbase_kN,N));setMx(n(rr.Mmax_kNm??rr.Mbase_kNm,Mx));},[])
  const r=useMemo(()=>solveColumn({N,Mx,My,b,h,L,fck,fyk,E,cover,phi,k,end}),[N,Mx,My,b,h,L,fck,fyk,E,cover,phi,k,end])
  const arm=useMemo(()=>{
    const longitudinal=chooseBars(r.AsReq,b*1000,cover*1000,8,4,12)
@@ -14,6 +17,7 @@ export default function ColumnsProPage(){
  },[r.AsReq,b,h,cover])
  const anch=useMemo(()=>anchorageLength(arm.longitudinal.dia,fck,fyk),[arm.longitudinal.dia,fck,fyk])
  return <div className="module-page"><div className="module-head"><div><h2>Pilares PRO</h2><p>Compressão + flexão biaxial, comprimento efetivo, Euler, 2.ª ordem e armadura preliminar.</p></div></div>
+ {bimSource&&<section className="panel bim-calc-banner"><b>Elemento BIM ligado: {bimSource}</b><span> · secção, material e esforços disponíveis carregados. </span><button onClick={()=>updateBIMCalculation(bimSource,'Pilares PRO',{NEd_kN:N,Mx_kNm:Mx,My_kNm:My,utilizacao:r.interaction,AsReq_mm2:r.AsReq},{verifiedIn:'Pilares PRO'})}>Devolver resultados ao BIM</button></section>}
  <div className="tabs-row">{(['pinned','fixed-pinned','fixed-fixed','cantilever','custom'] as EndCondition[]).map(x=><button key={x} className={end===x?'active':''} onClick={()=>setEnd(x)}>{({pinned:'Articulado-articulado','fixed-pinned':'Encastrado-articulado','fixed-fixed':'Bi-encastrado',cantilever:'Consola',custom:'k manual'} as any)[x]}</button>)}</div>
  <div className="work-grid"><section className="panel"><h3>Ações / geometria</h3><div className="form-grid"><F l="NEd" u="kN" v={N} s={setN}/><F l="Mx,Ed" u="kN·m" v={Mx} s={setMx}/><F l="My,Ed" u="kN·m" v={My} s={setMy}/><F l="b" u="m" v={b} s={setB}/><F l="h" u="m" v={h} s={setH}/><F l="Comprimento L" u="m" v={L} s={setL}/>{end==='custom'&&<F l="Coeficiente k" v={k} s={setK}/>}</div><h3>Material / armadura</h3><div className="form-grid"><F l="fck" u="MPa" v={fck} s={setFck}/><F l="fyk" u="MPa" v={fyk} s={setFyk}/><F l="E" u="GPa" v={E} s={setE}/><F l="Recobrimento" u="m" v={cover} s={setCover}/><F l="Ø longitudinal" u="mm" v={phi} s={setPhi}/></div></section>
  <section className="panel"><h3>Estabilidade</h3><div className="result-grid"><M t="k efetivo" v={fmt(r.kEff,2)}/><M t="L efetivo" v={`${fmt(r.le,2)} m`}/><M t="λx" v={fmt(r.lambdaX,1)}/><M t="λy" v={fmt(r.lambdaY,1)}/><M t="Ncr,x" v={`${fmt(r.NcrX,0)} kN`}/><M t="Ncr,y" v={`${fmt(r.NcrY,0)} kN`}/></div></section></div>

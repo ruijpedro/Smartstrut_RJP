@@ -1,4 +1,5 @@
-import React,{useMemo,useState} from 'react'
+import React,{useEffect,useMemo,useState} from 'react'
+import {readBIMHandoff,updateBIMCalculation,n} from '../../engineering/bim/calculationBridge'
 import {EngineeringBasis} from '../../engineering/EngineeringBasis'
 import {solveSlab,type SlabSupport} from './SlabSolver'
 import {fmt} from '../../engineering/structuralMath'
@@ -6,6 +7,8 @@ import {chooseDistributed,anchorageLength} from '../beamsPro/ReinforcementLibrar
 const F=({l,v,s,u}:{l:string,v:number,s:(n:number)=>void,u?:string})=><label className="field"><span>{l}{u?` (${u})`:''}</span><input type="number" step="any" value={v} onChange={e=>s(+e.target.value)}/></label>
 export default function SlabsProPage(){
  const[lx,setLx]=useState(4.5),[ly,setLy]=useState(5.5),[gk,setG]=useState(5),[qk,setQ]=useState(3),[t,setT]=useState(.18),[cover,setC]=useState(.025),[fck,setFck]=useState(30),[fyk,setFyk]=useState(500),[E,setE]=useState(30),[phi,setPhi]=useState(10),[support,setSupport]=useState<SlabSupport>('simple')
+ const[bimSource,setBimSource]=useState<string|null>(null)
+ useEffect(()=>{const x=readBIMHandoff(['slab']);if(!x)return;setBimSource(x.elementId);setLx(n(x.geometry.width,lx));setLy(n(x.geometry.depth,ly));setT(n(x.geometry.thickness,t));setFck(n(x.material?.properties?.fck_MPa,fck));},[])
  const r=useMemo(()=>solveSlab({lx,ly,gk,qk,t,cover,fck,fyk,E,phi,support}),[lx,ly,gk,qk,t,cover,fck,fyk,E,phi,support])
  const arm=useMemo(()=>({
    x:chooseDistributed(r.Asx,300,6,25),
@@ -15,6 +18,7 @@ export default function SlabsProPage(){
  }),[r.Asx,r.Asy,r.AsNegX,r.AsNegY])
  const anch=useMemo(()=>({x:anchorageLength(arm.x.dia,fck,fyk),y:anchorageLength(arm.y.dia,fck,fyk)}),[arm.x.dia,arm.y.dia,fck,fyk])
  return <div className="module-page"><div className="module-head"><div><h2>Lajes PRO</h2><p>Unidirecional/bidirecional, ELU simplificado, armaduras X/Y e controlo preliminar de deformação.</p></div></div>
+ {bimSource&&<section className="panel bim-calc-banner"><b>Elemento BIM ligado: {bimSource}</b><span> · dimensões e material carregados do modelo. </span><button onClick={()=>updateBIMCalculation(bimSource,'Lajes PRO',{qEd_kPa:r.qEd,Mx_kNm_m:r.Mx,My_kNm_m:r.My,Asx_mm2_m:r.Asx,Asy_mm2_m:r.Asy},{verifiedIn:'Lajes PRO'})}>Devolver resultados ao BIM</button></section>}
  <div className="tabs-row"><button className={support==='simple'?'active':''} onClick={()=>setSupport('simple')}>Simplesmente apoiada</button><button className={support==='continuous'?'active':''} onClick={()=>setSupport('continuous')}>Contínua</button></div>
  <div className="work-grid"><section className="panel"><h3>Geometria / ações</h3><div className="form-grid"><F l="lx" u="m" v={lx} s={setLx}/><F l="ly" u="m" v={ly} s={setLy}/><F l="gk" u="kN/m²" v={gk} s={setG}/><F l="qk" u="kN/m²" v={qk} s={setQ}/><F l="Espessura h" u="m" v={t} s={setT}/><F l="Recobrimento" u="m" v={cover} s={setC}/></div><h3>Materiais / armadura</h3><div className="form-grid"><F l="fck" u="MPa" v={fck} s={setFck}/><F l="fyk" u="MPa" v={fyk} s={setFyk}/><F l="E" u="GPa" v={E} s={setE}/><F l="Ø escolhido" u="mm" v={phi} s={setPhi}/></div></section>
  <section className="panel"><h3>Modelo</h3><SlabSvg lx={lx} ly={ly} twoWay={r.twoWay}/><div className="result-grid"><M t="Comportamento" v={r.twoWay?'Bidirecional':'Unidirecional'}/><M t="ly/lx" v={fmt(r.ratio,2)}/><M t="L/h" v={fmt(r.spanDepth,1)}/></div></section></div>

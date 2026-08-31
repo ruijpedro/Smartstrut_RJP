@@ -1,4 +1,5 @@
-import React,{useMemo,useState} from 'react'
+import React,{useEffect,useMemo,useState} from 'react'
+import {readBIMHandoff,updateBIMCalculation,n} from '../../engineering/bim/calculationBridge'
 import {EngineeringBasis} from '../../engineering/EngineeringBasis'
 import {solveBeam,type SupportType,type BeamLoad} from './BeamSolver'
 import {fmt} from '../../engineering/structuralMath'
@@ -12,6 +13,8 @@ export default function BeamsProPage(){
  const[b,setB]=useState(.30),[h,setH]=useState(.55),[cover,setCover]=useState(.035),[fck,setFck]=useState(30),[fyk,setFyk]=useState(500),[E,setE]=useState(30)
  const[loads,setLoads]=useState<BeamLoad[]>([{id:1,type:'udl',value:12,x1:0,x2:6}])
  const[step,setStep]=useState<Step>('armaduras')
+ const[bimSource,setBimSource]=useState<string|null>(null)
+ useEffect(()=>{const x=readBIMHandoff(['beam']);if(!x)return;setBimSource(x.elementId);setL(n(x.geometry.length,L));setB(n(x.geometry.b,b));setH(n(x.geometry.h,h));setFck(n(x.material?.properties?.fck_MPa,fck));},[])
  const r=useMemo(()=>solveBeam({L,support,b,h,cover,fck,fyk,E,loads}),[L,support,b,h,cover,fck,fyk,E,loads])
  const reinforcement=useMemo(()=>{
    const bmm=b*1000,coverMm=cover*1000
@@ -40,6 +43,7 @@ export default function BeamsProPage(){
  const upd=(id:number,p:Partial<BeamLoad>)=>setLoads(loads.map(x=>x.id===id?{...x,...p}:x))
 
  return <div className="module-page v75-page">
+ {bimSource&&<section className="panel bim-calc-banner"><b>Elemento BIM ligado: {bimSource}</b><span> · geometria/material carregados do modelo. </span><button onClick={()=>updateBIMCalculation(bimSource,'Vigas PRO',{Mpos_kNm:r.Mpos,Mneg_kNm:r.Mneg,Vmax_kN:r.Vmax,AsBottom_mm2:r.AsBottom,AsTop_mm2:r.AsTop},{verifiedIn:'Vigas PRO'})}>Devolver resultados ao BIM</button></section>}
   <div className="module-head"><div><h2>Vigas PRO</h2><p>Dimensionamento e pormenorização visual de armaduras.</p></div></div>
 
   <div className="v75-stepbar">{([
