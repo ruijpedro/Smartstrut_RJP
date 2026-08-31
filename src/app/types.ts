@@ -14,6 +14,7 @@ export type ModuleId =
   | 'structuralproject'
   | 'lsf'
   | 'preliminarystudy'
+  | 'rehabilitation'
   | 'walls'
   | 'containment'
   | 'soilnails'

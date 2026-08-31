@@ -41,6 +41,7 @@ import StructuralProjectPage from '../modules/structuralProject/StructuralProjec
 import HelpPage from '../modules/help/HelpPage'
 import LSFPage from '../modules/lsf/LSFPage'
 import PreliminaryStudyPage from '../modules/preliminaryStudy/PreliminaryStudyPage'
+import { RehabilitationPage } from '../modules/rehabilitation'
 
 function Planned({ title }: { title: string }) {
   return <div className="page"><div className="pageTitle"><h1>{title}</h1><span>Em preparação</span></div><section className="panel planned"><h2>Módulo ainda não integrado</h2><p>Este módulo será acrescentado numa fase própria, mantendo WebApp e APK compiláveis antes de avançar.</p></section></div>
@@ -67,10 +68,11 @@ export default function App() {
   if (active === 'integrated') content = <IntegratedStructurePage/>
   if (active === 'framefoundation') content = <FrameFoundationPage/>
   if (active === 'buildingmodel') content = <BuildingModelPage/>
-  if (active === 'bimmodel') content = <BIMModelPage/>
+  if (active === 'bimmodel') content = <BIMModelPage onOpen={setActive}/>
   if (active === 'structuralproject') content = <StructuralProjectPage/>
   if (active === 'lsf') content = <LSFPage/>
   if (active === 'preliminarystudy') content = <PreliminaryStudyPage/>
+  if (active === 'rehabilitation') content = <RehabilitationPage/>
   if (active === 'walls') content = <WallsPage/>
   if (active === 'containment') content = <ContainmentPage/>
   if (active === 'soilnails') content = <SoilNailsPage/>

@@ -11,7 +11,7 @@ export interface BIMElement {
  calculation?:{module:string;status:'calculated'|'preliminary'|'check';results:Record<string,BIMProperty>}
 }
 export interface SmartStructBIMModel {
- schema:'SmartStruct-BIM/0.2';
+ schema:'SmartStruct-BIM/0.6';
  project:{name:string;location?:string;author?:string};
  elements:BIMElement[];
  createdAt:string;
@@ -19,9 +19,9 @@ export interface SmartStructBIMModel {
 }
 export const BIM_STORAGE_KEY='smartstruct:bim-model'
 export const concreteC30: BIMMaterialRef={id:'MAT-CONC-C30',name:'Betão C30/37',family:'Betão',properties:{fck_MPa:30}}
-export function createBIMModel(name='Projeto SmartStruct'):SmartStructBIMModel{const now=new Date().toISOString();return{schema:'SmartStruct-BIM/0.2',project:{name},elements:[],createdAt:now,updatedAt:now}}
+export function createBIMModel(name='Projeto SmartStruct'):SmartStructBIMModel{const now=new Date().toISOString();return{schema:'SmartStruct-BIM/0.6',project:{name},elements:[],createdAt:now,updatedAt:now}}
 export function saveBIMModel(model:SmartStructBIMModel){const m={...model,updatedAt:new Date().toISOString()};localStorage.setItem(BIM_STORAGE_KEY,JSON.stringify(m));return m}
-export function loadBIMModel():SmartStructBIMModel|null{try{const raw=localStorage.getItem(BIM_STORAGE_KEY);if(!raw)return null;const x=JSON.parse(raw);if(!x?.elements)return null;return{...x,schema:'SmartStruct-BIM/0.2',updatedAt:x.updatedAt||x.createdAt||new Date().toISOString()}}catch{return null}}
+export function loadBIMModel():SmartStructBIMModel|null{try{const raw=localStorage.getItem(BIM_STORAGE_KEY);if(!raw)return null;const x=JSON.parse(raw);if(!x?.elements)return null;return{...x,schema:'SmartStruct-BIM/0.6',updatedAt:x.updatedAt||x.createdAt||new Date().toISOString()}}catch{return null}}
 export function exportBIMJson(model:SmartStructBIMModel){const blob=new Blob([JSON.stringify(model,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SmartStruct_BIM_Model.json';a.click();URL.revokeObjectURL(a.href)}
 
 export interface BuildingBIMInput{
@@ -65,4 +65,43 @@ export function buildConceptualBuildingBIM(i:BuildingBIMInput):SmartStructBIMMod
    geometry:{x:x*i.bay,y:0,z:fl*i.storey,width:i.bay,depth:i.depth,thickness:.18},properties:{status:'geometria preliminar'},calculation:{module:'BIM conceptual',status:'check',results:{nota:'Espessura de referência; confirmar em Lajes PRO'}}});id++
  }
  model.elements=els;return model
+}
+
+
+export interface StructuralProjectBIMInput{
+ project:{name:string;location?:string;engineer?:string;fck:number;fyk:number;cover:number;floors:number;bays:number;bay:number;storey:number;trib:number};
+ nodes:Array<{id:number;x:number;y:number}>;
+ elements:Array<{id:number;a:number;b:number}>;
+ envelope:Array<{id:number;N:number;V:number;M:number;Ncase:string;Vcase:string;Mcase:string}>|null;
+ foundations:Array<{id:number;node:number;Rx:number;Ry:number;M:number;B:number;L:number;h:number;r:{qmax:number;bearingUtil:number;ok:boolean}}>;
+ steelRows?:Array<{mark:string;type:string;element:string;notation:string;weight:number}>;
+}
+/** Builds the BIM information model directly from Structural Project PRO.
+ * IDs are deterministic from structural element/node IDs so properties remain traceable between recalculations.
+ * The source analysis is still the current 2D frame model; BIM geometry does not imply a 3D FEM verification.
+ */
+export function buildStructuralProjectBIM(i:StructuralProjectBIMInput):SmartStructBIMModel{
+ const now=new Date().toISOString(),old=loadBIMModel()
+ const concrete:BIMMaterialRef={id:`MAT-CONC-C${i.project.fck}`,name:`Betão C${i.project.fck}`,family:'Betão',properties:{fck_MPa:i.project.fck}}
+ const els:BIMElement[]=[]
+ const nodeById=(id:number)=>i.nodes.find(n=>n.id===id)
+ const steelFor=(kind:string,id:number)=>i.steelRows?.filter(r=>r.type===kind&&r.element.includes(String(id))).map(r=>r.notation).join(' + ')||null
+ for(const e of i.elements){
+  const a=nodeById(e.a),b=nodeById(e.b);if(!a||!b)continue
+  const vertical=Math.abs(b.x-a.x)<1e-9,L=Math.hypot(b.x-a.x,b.y-a.y),env=i.envelope?.find(x=>x.id===e.id)
+  const level=vertical?`Piso ${Math.max(1,Math.round(Math.max(a.y,b.y)/Math.max(i.project.storey,.01)))}`:`Piso ${Math.max(1,Math.round(a.y/Math.max(i.project.storey,.01)))}`
+  els.push({id:`SP-${vertical?'C':'V'}-E${e.id}`,name:`${vertical?'Pilar':'Viga'} E${e.id}`,discipline:'structures',type:vertical?'column':'beam',level,material:concrete,
+   geometry:vertical?{x:a.x,y:0,z:Math.min(a.y,b.y),length:L,b:.35,h:.45,axis:'Z'}:{x:Math.min(a.x,b.x),y:0,z:a.y,length:L,b:.25,h:.50,axis:'X'},
+   properties:{sourceModule:'Structural Project PRO',sourceElementId:e.id,fyk_MPa:i.project.fyk,recobrimento_m:i.project.cover,armadura:steelFor(vertical?'Pilares':'Vigas',e.id)},
+   calculation:{module:'Structural Project PRO',status:env?'calculated':'check',results:env?{Nmax_kN:env.N,Vmax_kN:env.V,Mmax_kNm:env.M,combN:env.Ncase,combV:env.Vcase,combM:env.Mcase}:{nota:'Sem envelope disponível'}}})
+ }
+ for(const f of i.foundations){
+  const n=nodeById(f.node);if(!n)continue
+  const reinf=i.steelRows?.filter(r=>r.type==='Sapatas'&&r.element===`F${f.id}`).map(r=>r.notation).join(' + ')||null
+  els.push({id:`SP-F-N${f.node}`,name:`Sapata F${f.id}`,discipline:'structures',type:'isolated_footing',level:'Fundação',material:concrete,
+   geometry:{x:n.x-f.B/2,y:-f.L/2,z:-f.h,width:f.B,depth:f.L,height:f.h},
+   properties:{sourceModule:'Structural Project PRO',sourceNodeId:f.node,fyk_MPa:i.project.fyk,recobrimento_m:i.project.cover,armadura:reinf},
+   calculation:{module:'Structural Project PRO',status:f.r.ok?'calculated':'check',results:{N_kN:f.Ry,H_kN:Math.abs(f.Rx),M_kNm:f.M,qmax_kPa:f.r.qmax,utilizacao_capacidade:f.r.bearingUtil}}})
+ }
+ return{schema:'SmartStruct-BIM/0.6',project:{name:i.project.name,location:i.project.location,author:i.project.engineer},elements:els,createdAt:old?.createdAt||now,updatedAt:now}
 }

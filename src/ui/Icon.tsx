@@ -5,6 +5,7 @@ const paths: Partial<Record<ModuleId, string>> = {
   beams: 'M3 7h18v3H3zm3 3h3v8H6zm9 0h3v8h-3z',
   frames: 'M4 20V5h16v15M4 10h16',
   lsf: 'M4 20V4h16v16M8 4v16m4-16v16m4-16v16M4 8h16M4 16h16',
+  rehabilitation: 'M4 20V6l8-3 8 3v14M7 20v-6h4v6m3-9h3m-1.5-1.5v3',
   trusses: 'M3 19 12 5l9 14H3Zm4 0 5-8 5 8',
   columns: 'M8 3h8v4h-2v10h2v4H8v-4h2V7H8z',
   slabs: 'M4 8l8-4 8 4-8 4-8-4Zm0 5 8 4 8-4',
