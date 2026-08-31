@@ -1,7 +1,8 @@
-import React,{useMemo,useState} from 'react'
+import React,{useEffect,useMemo,useState} from 'react'
 import {solveFrame2D,type FrameModel} from '../../engineering/core/frame2d'
 import {isolatedFootingPro} from '../foundationsPro/FoundationsSolver'
 import {chooseBars,chooseDistributed,barArea} from '../beamsPro/ReinforcementLibrary'
+import {buildStructuralProjectBIM,saveBIMModel} from '../../engineering/bim/model'
 
 type Tab='project'|'geometry'|'materials'|'loads'|'combinations'|'analysis'|'design'|'foundations'|'steel'|'report'
 type Combo={name:string,g:number;q:number;w:number}
@@ -93,6 +94,9 @@ export default function StructuralProjectPage(){
  const maxM=solved.r?Math.max(...solved.r.endForces.flatMap(e=>[Math.abs(e.M1),Math.abs(e.M2)]))/1000:0
  const drift=storey>0?maxDisp/storey:0
  const project={name,location,engineer,floors:nf,bays:nb,bay,storey,trib,fck,fyk,E,gamma,cover,gk,qk,wall,wind,qadm,combo}
+ const bimModel=useMemo(()=>buildStructuralProjectBIM({project,nodes:model.nodes,elements:model.elements,envelope,foundations,steelRows:steelSchedule.rows}),[name,location,engineer,nf,nb,bay,storey,trib,fck,fyk,cover,model,envelope,foundations,steelSchedule.rows])
+ useEffect(()=>{saveProject(project);saveBIMModel(bimModel)},[bimModel])
+ function updateBIM(){saveProject(project);saveBIMModel(bimModel)}
  function exportJson(){const blob=new Blob([JSON.stringify(project,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=`${name.replace(/\s+/g,'_')||'SmartStruct'}_project.json`;a.click();URL.revokeObjectURL(u)}
  function exportSteelCsv(){
   const head=['Marca','Tipo','Elemento','Armadura','Qtd','Comp. unit. m','Comp. total m','Peso kg','Origem']
@@ -103,7 +107,7 @@ export default function StructuralProjectPage(){
  }
  return <div className="module-page"><div className="module-head"><div><h2>Structural Project PRO</h2><p>Projeto → ações → combinações → análise → pré-dimensionamento → fundações → relatório.</p></div></div>
  <div className="tabs-row">{tabs.map(([id,l])=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>{l}</button>)}</div>
- {tab==='project'&&<section className="panel"><h3>Projeto</h3><div className="form-grid"><T l="Nome" v={name} s={setName}/><T l="Localização" v={location} s={setLocation}/><T l="Engenheiro" v={engineer} s={setEngineer}/></div><div className="editor-toolbar"><button onClick={()=>saveProject(project)}>Guardar localmente</button><button onClick={exportJson}>Exportar JSON</button></div><p className="note">O ficheiro JSON guarda os dados introduzidos, não constitui relatório regulamentar.</p></section>}
+ {tab==='project'&&<section className="panel"><h3>Projeto</h3><div className="form-grid"><T l="Nome" v={name} s={setName}/><T l="Localização" v={location} s={setLocation}/><T l="Engenheiro" v={engineer} s={setEngineer}/></div><div className="editor-toolbar"><button onClick={()=>saveProject(project)}>Guardar localmente</button><button className="primary" onClick={updateBIM}>Atualizar BIM</button><button onClick={exportJson}>Exportar JSON</button></div><p className="note">O ficheiro JSON guarda os dados introduzidos, não constitui relatório regulamentar.</p></section>}
  {tab==='geometry'&&<section className="panel"><h3>Geometria</h3><div className="form-grid"><F l="Pisos" v={floors} s={setFloors}/><F l="Vãos" v={bays} s={setBays}/><F l="Largura do vão" u="m" v={bay} s={setBay}/><F l="Pé-direito" u="m" v={storey} s={setStorey}/><F l="Largura de influência" u="m" v={trib} s={setTrib}/></div><FrameSvg model={model}/></section>}
  {tab==='materials'&&<section className="panel"><h3>Materiais</h3><div className="form-grid"><F l="fck" u="MPa" v={fck} s={setFck}/><F l="fyk" u="MPa" v={fyk} s={setFyk}/><F l="Ecm adotado" u="GPa" v={E} s={setE}/><F l="Peso vol. betão" u="kN/m³" v={gamma} s={setGamma}/><F l="Recobrimento" u="m" v={cover} s={setCover}/></div></section>}
  {tab==='loads'&&<section className="panel"><h3>Ações características</h3><div className="form-grid"><F l="Gk piso" u="kN/m²" v={gk} s={setGk}/><F l="Qk utilização" u="kN/m²" v={qk} s={setQk}/><F l="Paredes/perm." u="kN/m²" v={wall} s={setWall}/><F l="Vento global" u="kN" v={wind} s={setWind}/></div><div className="result-grid"><M t="Peso próprio viga ref." v={`${selfBeam.toFixed(2)} kN/m`}/><M t="Carga linear da combinação" v={`${qLine.toFixed(2)} kN/m`}/></div></section>}
@@ -118,7 +122,7 @@ export default function StructuralProjectPage(){
  </section>
  <section className="panel"><h3>Lista de corte / mapa de varões</h3><div className="steel-schedule">{steelSchedule.rows.map(r=><div className="steel-row" key={`${r.mark}-${r.element}`}><b>{r.mark}</b><span className="steel-type">{r.type}</span><span>{r.element}</span><strong>{r.notation}</strong><span>{r.qty} un.</span><span>{r.unitLength.toFixed(2)} m/un.</span><span>{r.totalLength.toFixed(2)} m</span><span>{r.weight.toFixed(1)} kg</span><small>{r.source}</small></div>)}</div>
  <p className="note">Mapa de aço preliminar. As secções de referência das barras do pórtico, comprimentos adicionais, estribos e ancoragens são estimados nesta fase; confirmar com o dimensionamento/pormenorização de cada elemento antes de emitir peças de execução.</p></section></>}
- {tab==='report'&&<section className="panel"><h3>Resumo preliminar do projeto</h3><div className="result-grid"><M t="Projeto" v={name}/><M t="Geometria" v={`${nf} pisos · ${nb} vãos`}/><M t="Betão" v={`C${fck}`}/><M t="Aço" v={`fyk ${fyk} MPa`}/><M t="Combinação" v={c.name}/><M t="Desloc. máx." v={`${(maxDisp*1000).toFixed(2)} mm`}/><M t="Momento máx." v={`${maxM.toFixed(1)} kN·m`}/><M t="Fundações" v={`${foundations.length}`}/><M t="Aço preliminar" v={`${steelSchedule.totalKg.toFixed(1)} kg`}/></div><p className="note">Relatório preliminar para estudo e rastreabilidade. Não substitui memória de cálculo, peças desenhadas nem verificações regulamentares completas.</p></section>}
+ {tab==='report'&&<section className="panel"><h3>Resumo preliminar do projeto</h3><div className="result-grid"><M t="Projeto" v={name}/><M t="Geometria" v={`${nf} pisos · ${nb} vãos`}/><M t="Betão" v={`C${fck}`}/><M t="Aço" v={`fyk ${fyk} MPa`}/><M t="Combinação" v={c.name}/><M t="Desloc. máx." v={`${(maxDisp*1000).toFixed(2)} mm`}/><M t="Momento máx." v={`${maxM.toFixed(1)} kN·m`}/><M t="Fundações" v={`${foundations.length}`}/><M t="Aço preliminar" v={`${steelSchedule.totalKg.toFixed(1)} kg`}/><M t="Objetos BIM ligados" v={`${bimModel.elements.length}`}/></div><p className="note">Relatório preliminar para estudo e rastreabilidade. Não substitui memória de cálculo, peças desenhadas nem verificações regulamentares completas.</p></section>}
  </div>
 }
 function FrameSvg({model}:{model:FrameModel}){const W=700,H=430,p=55,mx=Math.max(...model.nodes.map(n=>n.x),1),my=Math.max(...model.nodes.map(n=>n.y),1),s=Math.min((W-2*p)/mx,(H-2*p)/my),P=(n:any)=>({x:p+n.x*s,y:H-p-n.y*s});return <svg viewBox={`0 0 ${W} ${H}`} className="eng-svg">{model.elements.map(e=>{const a=P(model.nodes.find(n=>n.id===e.a)!),b=P(model.nodes.find(n=>n.id===e.b)!);return <line key={e.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#a9bacd" strokeWidth="5"/>})}{model.nodes.map(n=>{const a=P(n);return <circle key={n.id} cx={a.x} cy={a.y} r="5" fill={n.y===0?'#2dd4bf':'#e7eef6'}/>})}</svg>}
