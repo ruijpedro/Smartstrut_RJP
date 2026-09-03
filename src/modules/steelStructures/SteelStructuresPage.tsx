@@ -1,0 +1,61 @@
+import React,{useEffect,useMemo,useState} from 'react'
+import {EngineeringBasis,PreliminaryChecklist} from '../../engineering/EngineeringBasis'
+
+type Tab='section'|'resistance'|'stability'|'connections'|'quantities'|'standards'
+const Num=({label,value,set,unit,step='any'}:{label:string;value:number;set:(v:number)=>void;unit?:string;step?:string})=><label className="field"><span>{label}{unit?` (${unit})`:''}</span><input type="number" step={step} value={value} onChange={e=>set(+e.target.value)}/></label>
+const Metric=({label,value,note}:{label:string;value:string;note?:string})=><article className="steel-status-card"><span>{label}</span><b>{value}</b>{note&&<small>{note}</small>}</article>
+
+export default function SteelStructuresPage(){
+ const[tab,setTab]=useState<Tab>('resistance')
+ const[name,setName]=useState('Perfil metálico')
+ const[A,setA]=useState(53.8),[Iy,setIy]=useState(8360),[Iz,setIz]=useState(604),[Wy,setWy]=useState(713),[Wz,setWz]=useState(103),[Av,setAv]=useState(28.0)
+ const[fy,setFy]=useState(355),[fu,setFu]=useState(510),[E,setE]=useState(210),[gammaM0,setGammaM0]=useState(1.0),[gammaM1,setGammaM1]=useState(1.0)
+ const[L,setL]=useState(4.0),[ky,setKy]=useState(1.0),[kz,setKz]=useState(1.0),[alphaY,setAlphaY]=useState(.34),[alphaZ,setAlphaZ]=useState(.49)
+ const[Ned,setNed]=useState(420),[MyEd,setMyEd]=useState(95),[MzEd,setMzEd]=useState(8),[Ved,setVed]=useState(75)
+ const[boltDia,setBoltDia]=useState(20),[boltFu,setBoltFu]=useState(800),[nBolts,setNBolts]=useState(4),[plateT,setPlateT]=useState(10)
+ const[lengthTotal,setLengthTotal]=useState(24),[waste,setWaste]=useState(5)
+ const r=useMemo(()=>calcSteel({A,Iy,Iz,Wy,Wz,Av,fy,E,gammaM0,gammaM1,L,ky,kz,alphaY,alphaZ,Ned,MyEd,MzEd,Ved}),[A,Iy,Iz,Wy,Wz,Av,fy,E,gammaM0,gammaM1,L,ky,kz,alphaY,alphaZ,Ned,MyEd,MzEd,Ved])
+ const conn=useMemo(()=>{const Ab=Math.PI*boltDia*boltDia/4;const shearPer=.6*boltFu*Ab/1.25/1000;return{Ab,shearPer,total:shearPer*nBolts}},[boltDia,boltFu,nBolts])
+ const massPerM=A*1e-4*7850
+ const totalMass=massPerM*lengthTotal*(1+waste/100)
+ useEffect(()=>{try{localStorage.setItem('smartstruct:steel-structures',JSON.stringify({updatedAt:new Date().toISOString(),section:{name,A,Iy,Iz,Wy,Wz,Av},material:{fy,fu,E,gammaM0,gammaM1},stability:{L,ky,kz,alphaY,alphaZ},actions:{Ned,MyEd,MzEd,Ved},results:r}))}catch{}},[name,A,Iy,Iz,Wy,Wz,Av,fy,fu,E,gammaM0,gammaM1,L,ky,kz,alphaY,alphaZ,Ned,MyEd,MzEd,Ved,r])
+ const checks=[
+  {name:'Resistência da secção',status:r.utilSection<=1?'ok' as const:'check' as const,detail:`Interação simplificada N + My + Mz: η ≈ ${r.utilSection.toFixed(2)}.`},
+  {name:'Corte',status:r.utilShear<=1?'ok' as const:'check' as const,detail:`Triagem por Av·fy/(√3·γM0): ηV ≈ ${r.utilShear.toFixed(2)}.`},
+  {name:'Encurvadura global eixo y',status:r.utilBuckY<=1?'ok' as const:'check' as const,detail:`χy ≈ ${r.chiY.toFixed(3)} · η ≈ ${r.utilBuckY.toFixed(2)}.`},
+  {name:'Encurvadura global eixo z',status:r.utilBuckZ<=1?'ok' as const:'check' as const,detail:`χz ≈ ${r.chiZ.toFixed(3)} · η ≈ ${r.utilBuckZ.toFixed(2)}.`},
+  {name:'Classe da secção / instabilidade local',status:'missing' as const,detail:'Classificar alma e banzos antes de aceitar resistências plásticas/elásticas.'},
+  {name:'Encurvadura lateral-torcional',status:'missing' as const,detail:'Obrigatória quando aplicável a vigas não travadas lateralmente.'},
+  {name:'Ligações',status:'check' as const,detail:'Inclui apenas triagem simples ao corte dos parafusos; completar esmagamento, tração, interação e soldaduras.'}
+ ]
+ return <div className="page steel-page">
+  <div className="pageTitle"><div><h1>Estruturas Metálicas</h1><span>Pré-dimensionamento e verificações de perfis em aço · base EC3</span></div></div>
+  <div className="steel-tabs">{([['section','Perfil / Material'],['resistance','Resistência'],['stability','Estabilidade'],['connections','Ligações'],['quantities','Quantificação'],['standards','Normas / Critérios']] as [Tab,string][]).map(([k,l])=><button key={k} className={tab===k?'active':''} onClick={()=>setTab(k)}>{l}</button>)}</div>
+
+  {tab==='section'&&<div className="work-grid"><section className="panel"><h2>Propriedades do perfil</h2><label className="field"><span>Designação</span><input value={name} onChange={e=>setName(e.target.value)}/></label><div className="form-grid"><Num label="Área A" unit="cm²" value={A} set={setA}/><Num label="Iy" unit="cm⁴" value={Iy} set={setIy}/><Num label="Iz" unit="cm⁴" value={Iz} set={setIz}/><Num label="Wy" unit="cm³" value={Wy} set={setWy}/><Num label="Wz" unit="cm³" value={Wz} set={setWz}/><Num label="Área de corte Av" unit="cm²" value={Av} set={setAv}/></div><p className="note">Introduzir propriedades de tabela do perfil escolhido. O módulo não assume automaticamente uma classe de secção.</p></section><section className="panel"><h2>Material</h2><div className="form-grid"><Num label="fy" unit="MPa" value={fy} set={setFy}/><Num label="fu" unit="MPa" value={fu} set={setFu}/><Num label="E" unit="GPa" value={E} set={setE}/><Num label="γM0" value={gammaM0} set={setGammaM0}/><Num label="γM1" value={gammaM1} set={setGammaM1}/></div><SteelSectionSvg/></section></div>}
+
+  {tab==='resistance'&&<><div className="work-grid"><section className="panel"><h2>Esforços de cálculo</h2><div className="form-grid"><Num label="NEd" unit="kN" value={Ned} set={setNed}/><Num label="My,Ed" unit="kN·m" value={MyEd} set={setMyEd}/><Num label="Mz,Ed" unit="kN·m" value={MzEd} set={setMzEd}/><Num label="VEd" unit="kN" value={Ved} set={setVed}/></div></section><section className="panel"><h2>Resistências da secção</h2><div className="steel-status-grid"><Metric label="Npl,Rd" value={`${r.NplRd.toFixed(0)} kN`} note="A·fy/γM0"/><Metric label="My,Rd" value={`${r.MyRd.toFixed(1)} kN·m`} note="Wy·fy/γM0"/><Metric label="Mz,Rd" value={`${r.MzRd.toFixed(1)} kN·m`} note="Wz·fy/γM0"/><Metric label="Vpl,Rd" value={`${r.VplRd.toFixed(0)} kN`} note="Av·fy/(√3·γM0)"/></div></section></div><section className="panel"><h2>Triagem de utilização</h2><div className="steel-status-grid"><Metric label="N + My + Mz" value={r.utilSection.toFixed(2)} note={r.utilSection<=1?'triagem OK':'rever perfil/esforços'}/><Metric label="Corte" value={r.utilShear.toFixed(2)} note={r.utilShear<=1?'triagem OK':'rever área de corte'}/></div><p className="note">A interação é deliberadamente conservadora e simplificada. Projeto final exige classificação da secção, interação regulamentar apropriada e verificação de todos os modos relevantes.</p></section></>}
+
+  {tab==='stability'&&<><div className="work-grid"><section className="panel"><h2>Comprimentos de encurvadura</h2><div className="form-grid"><Num label="Comprimento L" unit="m" value={L} set={setL}/><Num label="ky" value={ky} set={setKy}/><Num label="kz" value={kz} set={setKz}/><Num label="αy curva encurvadura" value={alphaY} set={setAlphaY}/><Num label="αz curva encurvadura" value={alphaZ} set={setAlphaZ}/></div><p className="note">Os parâmetros α devem corresponder à curva de encurvadura adequada ao tipo de perfil, eixo e processo de fabrico.</p></section><section className="panel"><h2>Resultados globais</h2><div className="steel-status-grid"><Metric label="Ncr,y" value={`${r.NcrY.toFixed(0)} kN`}/><Metric label="Ncr,z" value={`${r.NcrZ.toFixed(0)} kN`}/><Metric label="λ̄y" value={r.lambdaBarY.toFixed(2)}/><Metric label="λ̄z" value={r.lambdaBarZ.toFixed(2)}/><Metric label="χy" value={r.chiY.toFixed(3)}/><Metric label="χz" value={r.chiZ.toFixed(3)}/><Metric label="Nb,Rd y" value={`${r.NbRdY.toFixed(0)} kN`}/><Metric label="Nb,Rd z" value={`${r.NbRdZ.toFixed(0)} kN`}/></div></section></div><section className="panel"><h2>Sequência de projeto</h2><PreliminaryChecklist items={checks}/></section></>}
+
+  {tab==='connections'&&<div className="work-grid"><section className="panel"><h2>Ligação aparafusada · triagem</h2><div className="form-grid"><Num label="Ø parafuso" unit="mm" value={boltDia} set={setBoltDia}/><Num label="fu parafuso" unit="MPa" value={boltFu} set={setBoltFu}/><Num label="N.º parafusos" value={nBolts} set={setNBolts}/><Num label="Espessura chapa" unit="mm" value={plateT} set={setPlateT}/></div><div className="steel-status-grid"><Metric label="Área nominal" value={`${conn.Ab.toFixed(0)} mm²`}/><Metric label="Corte / parafuso" value={`${conn.shearPer.toFixed(1)} kN`} note="triagem simples"/><Metric label="Corte total" value={`${conn.total.toFixed(1)} kN`}/></div></section><section className="panel"><h2>Verificações a completar</h2><PreliminaryChecklist items={[{name:'Corte dos parafusos',status:'check',detail:'Triagem pela área nominal; confirmar área resistente e plano de corte.'},{name:'Esmagamento da chapa',status:'missing',detail:`Necessita fu da chapa, e1/e2, p1/p2 e t=${plateT} mm.`},{name:'Tração / interação',status:'missing',detail:'Verificar quando existirem esforços normais nos parafusos.'},{name:'Soldaduras',status:'missing',detail:'Dimensionar garganta, comprimento efetivo e resistência do metal de adição.'}]}/></section></div>}
+
+  {tab==='quantities'&&<><section className="panel"><h2>Quantificação preliminar</h2><div className="form-grid"><Num label="Comprimento total de perfis" unit="m" value={lengthTotal} set={setLengthTotal}/><Num label="Perdas" unit="%" value={waste} set={setWaste}/></div><div className="steel-status-grid"><Metric label="Massa linear" value={`${massPerM.toFixed(1)} kg/m`} note="ρ = 7850 kg/m³"/><Metric label="Massa total" value={`${totalMass.toFixed(0)} kg`} note="inclui perdas indicadas"/><Metric label="Aço" value={`${(totalMass/1000).toFixed(2)} t`}/></div></section><section className="panel"><h2>Mapa preliminar</h2><div className="member-table"><div><b>{name}</b><span>{lengthTotal.toFixed(2)} m</span><span>{massPerM.toFixed(2)} kg/m</span><span>{totalMass.toFixed(0)} kg</span></div></div><p className="note">Não inclui chapas de ligação, parafusos, soldaduras, reforços, perdas adicionais, proteção anticorrosiva ou proteção ao fogo.</p></section></>}
+
+  {tab==='standards'&&<><EngineeringBasis area="structures"/><section className="panel"><h2>Estado do módulo metálico</h2><PreliminaryChecklist items={checks}/><p className="note">Base de cálculo orientada à família EN 1993/Eurocódigo 3. Confirmar sempre edição adotada, Anexo Nacional, execução, ligações, fogo, fadiga e requisitos específicos do projeto.</p></section></>}
+ </div>
+}
+
+function calcSteel(x:{A:number;Iy:number;Iz:number;Wy:number;Wz:number;Av:number;fy:number;E:number;gammaM0:number;gammaM1:number;L:number;ky:number;kz:number;alphaY:number;alphaZ:number;Ned:number;MyEd:number;MzEd:number;Ved:number}){
+ const A=x.A*100, Iy=x.Iy*1e4, Iz=x.Iz*1e4, Wy=x.Wy*1e3, Wz=x.Wz*1e3, Av=x.Av*100, E=x.E*1000, L=x.L*1000
+ const NplRd=A*x.fy/x.gammaM0/1000, MyRd=Wy*x.fy/x.gammaM0/1e6, MzRd=Wz*x.fy/x.gammaM0/1e6, VplRd=Av*x.fy/(Math.sqrt(3)*x.gammaM0)/1000
+ const NcrY=Math.PI*Math.PI*E*Iy/Math.pow(Math.max(1,x.ky*L),2)/1000, NcrZ=Math.PI*Math.PI*E*Iz/Math.pow(Math.max(1,x.kz*L),2)/1000
+ const lambdaBarY=Math.sqrt(Math.max(0,A*x.fy/(Math.max(NcrY,1e-9)*1000))), lambdaBarZ=Math.sqrt(Math.max(0,A*x.fy/(Math.max(NcrZ,1e-9)*1000)))
+ const chi=(lb:number,a:number)=>{const phi=.5*(1+a*(lb-.2)+lb*lb);return Math.min(1,1/(phi+Math.sqrt(Math.max(0,phi*phi-lb*lb))))}
+ const chiY=chi(lambdaBarY,x.alphaY),chiZ=chi(lambdaBarZ,x.alphaZ)
+ const NbRdY=chiY*A*x.fy/x.gammaM1/1000,NbRdZ=chiZ*A*x.fy/x.gammaM1/1000
+ const utilSection=Math.abs(x.Ned)/Math.max(NplRd,1e-9)+Math.abs(x.MyEd)/Math.max(MyRd,1e-9)+Math.abs(x.MzEd)/Math.max(MzRd,1e-9)
+ const utilShear=Math.abs(x.Ved)/Math.max(VplRd,1e-9),utilBuckY=Math.abs(x.Ned)/Math.max(NbRdY,1e-9),utilBuckZ=Math.abs(x.Ned)/Math.max(NbRdZ,1e-9)
+ return{NplRd,MyRd,MzRd,VplRd,NcrY,NcrZ,lambdaBarY,lambdaBarZ,chiY,chiZ,NbRdY,NbRdZ,utilSection,utilShear,utilBuckY,utilBuckZ}
+}
+function SteelSectionSvg(){return <div className="steel-drawing"><svg viewBox="0 0 420 250"><path d="M95 45h230v32H225v96h100v32H95v-32h100V77H95z" fill="none" stroke="currentColor" strokeWidth="8"/><text x="210" y="28" textAnchor="middle">Perfil I/H genérico</text><text x="210" y="232" textAnchor="middle">propriedades introduzidas pelo utilizador</text></svg></div>}
