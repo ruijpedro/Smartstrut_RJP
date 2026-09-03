@@ -28,7 +28,7 @@ function SanitaryBuilder(){
  <div className="fixture-grid">{FIXTURES.map(f=><div className="fixture-row" key={f.id}><div><b>{f.name}</b><small>Água {f.water.toFixed(2)} L/s · Esgoto {f.waste.toFixed(2)} L/s</small></div><div className="stepper"><button onClick={()=>setCounts({...counts,[f.id]:Math.max(0,(counts[f.id]||0)-1)})}>−</button><strong>{counts[f.id]||0}</strong><button onClick={()=>setCounts({...counts,[f.id]:(counts[f.id]||0)+1})}>+</button></div></div>)}</div>
  </section>
  <section className="tech-card"><h3>RESUMO</h3><div className="hyd-grid"><R l="N.º aparelhos" v={String(totals.n)}/><R l="Q instalado água" v={`${totals.water.toFixed(2)} L/s`}/><R l="Simultaneidade preliminar" v={ks.toFixed(3)}/><R l="Q cálculo água" v={`${qWater.toFixed(2)} L/s`}/><R l="Q descarga acumulado" v={`${totals.waste.toFixed(2)} L/s`}/><R l="Q cálculo esgoto (pré-dim.)" v={`${qWaste.toFixed(2)} L/s`}/></div></section>
- <section className="tech-card rules-card"><h3>VERIFICAÇÕES REGULAMENTARES IMPLEMENTADAS/PLANEADAS</h3><ul><li>Água: Q de cálculo a partir dos dispositivos + simultaneidade.</li><li>Água: velocidade admissível 0,5–2,0 m/s.</li><li>Pressão nos dispositivos: 50–600 kPa; recomendável 150–300 kPa.</li><li>Esgotos: ramais com inclinação 10–40 mm/m.</li><li>Ramais não individuais: cálculo a meia secção.</li><li>Tubos de queda: taxa de ocupação dependente da ventilação.</li></ul></section>
+ <section className="tech-card rules-card"><h3>VERIFICAÇÕES REGULAMENTARES ATIVAS</h3><ul><li>Água: Q de cálculo a partir dos dispositivos + simultaneidade.</li><li>Água: velocidade admissível 0,5–2,0 m/s.</li><li>Pressão nos dispositivos: 50–600 kPa; recomendável 150–300 kPa.</li><li>Esgotos: ramais com inclinação 10–40 mm/m.</li><li>Ramais não individuais: cálculo a meia secção.</li><li>Tubos de queda: taxa de ocupação dependente da ventilação.</li></ul></section>
  </div>
 }
 function Supply(){
@@ -61,5 +61,5 @@ function HydraulicCriteria(){return <><EngineeringBasis area="hydraulics"/><sect
 {name:'Diâmetros / velocidades / perdas',status:'ok',detail:'Pré-dimensionamento implementado nos separadores de água e drenagem.'},
 {name:'Perfil e cotas da rede',status:'ok',detail:'Disponível para coletores públicos e editor gráfico.'},
 {name:'Órgãos e acessibilidade',status:'check',detail:'CV/PV, válvulas, sumidouros e outros órgãos devem ser validados segundo implantação e manutenção.'},
-{name:'Anexos e curvas regulamentares',status:'missing',detail:'Algumas curvas/tabelas do DR 23/95 ainda não estão digitalizadas de forma normativa.'}
+{name:'Anexos e curvas regulamentares',status:'check',detail:'Verificação ativa por parâmetro/critério: confirmar a curva ou tabela regulamentar aplicável antes de fechar o projeto.'}
 ]}/></section></>}
