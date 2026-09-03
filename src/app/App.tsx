@@ -40,6 +40,8 @@ import { BIMModelPage } from '../modules/bimModel'
 import StructuralProjectPage from '../modules/structuralProject/StructuralProjectPage'
 import HelpPage from '../modules/help/HelpPage'
 import LSFPage from '../modules/lsf/LSFPage'
+import { SteelStructuresPage } from '../modules/steelStructures'
+import {TimberPage,MasonryPage,CompositePage,SeismicPage,DeepFoundationsPage,GlobalSlopesPage,BridgesPage} from '../modules/specialties/SpecialtyPages'
 import PreliminaryStudyPage from '../modules/preliminaryStudy/PreliminaryStudyPage'
 import { RehabilitationPage } from '../modules/rehabilitation'
 
@@ -71,6 +73,14 @@ export default function App() {
   if (active === 'bimmodel') content = <BIMModelPage onOpen={setActive}/>
   if (active === 'structuralproject') content = <StructuralProjectPage/>
   if (active === 'lsf') content = <LSFPage/>
+  if (active === 'steelstructures') content = <SteelStructuresPage/>
+  if (active === 'timber') content = <TimberPage/>
+  if (active === 'masonry') content = <MasonryPage/>
+  if (active === 'composite') content = <CompositePage/>
+  if (active === 'seismic') content = <SeismicPage/>
+  if (active === 'deepfoundations') content = <DeepFoundationsPage/>
+  if (active === 'globalslopes') content = <GlobalSlopesPage/>
+  if (active === 'bridges') content = <BridgesPage/>
   if (active === 'preliminarystudy') content = <PreliminaryStudyPage/>
   if (active === 'rehabilitation') content = <RehabilitationPage/>
   if (active === 'walls') content = <WallsPage/>
