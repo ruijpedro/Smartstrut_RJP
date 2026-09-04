@@ -20,7 +20,7 @@ export function importIFCText(text:string):IFCImportSummary{
  const project=[...map.values()].find(e=>e.type==='IFCPROJECT'),projectName=project?quoted(project.args)[1]||quoted(project.args)[0]:'Projeto IFC importado'
  const model=createBIMModel(projectName);const els:BIMElement[]=[];let ignored=0;const warnings:string[]=[]
  for(const e of map.values()){
-  const bt=mapType(e.type);if(!bt)continue;const a=splitArgs(e.args),qs=quoted(e.args),name=qs[1]||`${e.type} #${e.id}`,tag=qs.at(-1)||`IFC-${e.id}`
+  const bt=mapType(e.type);if(!bt)continue;const a=splitArgs(e.args),qs=quoted(e.args),name=qs[1]||`${e.type} #${e.id}`,tag=(qs.length?qs[qs.length-1]:'')||`IFC-${e.id}`
   const placeRef=refs(a[5]||'')[0],shapeRef=refs(a[6]||'')[0],p=placement(map,placeRef),box=productGeometry(map,shapeRef)
   if(!box){ignored++;continue}
   let geometry:Record<string,string|number|boolean|null>={x:p[0],y:p[1],z:p[2]}
